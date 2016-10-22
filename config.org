@@ -5,7 +5,7 @@ This configuration is designed to follow the [[https://ploum.net/207-modify-your
 I configure locations for files of quite a lot of things.
 
 To use this configuration of Emacs, save this file in
-=~/.config/emacs/config.org=. You can download the file [[https://home.elis.nu/.emacs.d/config.org][here]].
+=~/.config/emacs/config.org=.
 
 This is a minimal bootstrap which should live in =~/.emacs=:
 #+begin_src emacs-lisp :tangle no
@@ -349,6 +349,21 @@ Paste whole buffers or parts of buffers to the internet.
       (use-package flycheck-mypy :ensure t)
       (use-package flycheck-rust :ensure t)
       (global-flycheck-mode)))
+#+end_src
+
+** Nicer handling of parens                                      :smartparen:...
+#+begin_src emacs-lisp :tangle yes
+  (use-package smartparens
+    :ensure t
+    :config
+    (progn
+      (add-hook 'js-mode-hook #'smartparens-mode)
+      (add-hook 'html-mode-hook #'smartparens-mode)
+      (add-hook 'python-mode-hook #'smartparens-mode)
+      (add-hook 'lua-mode-hook #'smartparens-mode)
+      (add-hook 'ruby-mode-hook #'smartparens-mode)
+      (add-hook 'rust-mode-hook #'smartparens-mode)))
+
 #+end_src
 
 * Useless utilities
