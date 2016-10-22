@@ -97,7 +97,7 @@ Because of some bug i get "cannot load" for this package with use-package.. Load
    (setq-default indent-tabs-mode nil)
    (setq-default tab-width 4)
 #+end_src
-* Language modes
+* Major modes
 ** Python jedi completions                                           :python:
 #+begin_src emacs-lisp :tangle yes
   (use-package jedi
@@ -150,6 +150,12 @@ Because of some bug i get "cannot load" for this package with use-package.. Load
 ** Markdown
 #+begin_src emacs-lisp :tangle yes
   (use-package markdown-mode :ensure t)
+#+end_src
+** YAML
+Handy when editing YAML/YML.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package yaml-mode :ensure t)
 #+end_src
 
 ** Go mode                                                               :go:
@@ -300,20 +306,6 @@ scrolling smoother.
       (setq-default ivy-use-virtual-buffers t)))
 #+end_src
 
-** Markdown
-Handy when editing markdown.
-
-#+begin_src emacs-lisp :tangle yes
-  (use-package markdown-mode :ensure t)
-#+end_src
-
-** YAML
-Handy when editing YAML/YML.
-
-#+begin_src emacs-lisp :tangle yes
-  (use-package yaml-mode :ensure t)
-#+end_src
-
 ** webpaste                                                           :paste:
 Paste whole buffers or parts of buffers to the internet.
 
@@ -350,7 +342,6 @@ Paste whole buffers or parts of buffers to the internet.
       (use-package flycheck-rust :ensure t)
       (global-flycheck-mode)))
 #+end_src
-
 ** Nicer handling of parens                                      :smartparen:...
 #+begin_src emacs-lisp :tangle yes
   (use-package smartparens
