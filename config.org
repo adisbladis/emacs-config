@@ -1,0 +1,363 @@
+#+TITLE: Adisbladis emacs configuration
+
+* Bootstrap this configuration
+This configuration is designed to follow the [[https://ploum.net/207-modify-your-application-to-use-xdg-folders/][XDG]] guidelines. This means that
+I configure locations for files of quite a lot of things.
+
+To use this configuration of Emacs, save this file in
+=~/.config/emacs/config.org=. You can download the file [[https://home.elis.nu/.emacs.d/config.org][here]].
+
+This is a minimal bootstrap which should live in =~/.emacs=:
+#+begin_src emacs-lisp :tangle no
+  ;; Define XDG directories
+  (setq-default user-emacs-config-directory
+                (concat (getenv "HOME") "/.config/emacs"))
+  (setq-default user-emacs-data-directory
+                (concat (getenv "HOME") "/.local/share/emacs"))
+  (setq-default user-emacs-cache-directory
+                (concat (getenv "HOME") "/.cache/emacs"))
+
+  ;; Load config
+  (org-babel-load-file (concat user-emacs-config-directory "/config.org"))
+#+end_src
+
+* Emacs initialization
+** Add package sources and initialize the package manager
+Set up package sources with HTTPS, specify where to store packages and
+initialize the package management.
+
+#+begin_src emacs-lisp :tangle yes
+  (setq-default package-archives
+                '(("gnu" . "https://elpa.gnu.org/packages/")
+                  ("melpa" . "https://melpa.org/packages/")))
+
+  (setq-default package-user-dir (concat user-emacs-cache-directory "/elpa"))
+
+  (package-initialize)
+#+end_src
+
+** Install use-package if missing
+#+begin_src emacs-lisp :tangle yes
+  (unless (package-installed-p 'use-package)
+    (progn
+      (package-refresh-contents)
+      (package-install 'use-package)))
+
+  (require 'use-package)
+#+end_src
+
+* General configuration
+** Backup Files
+Unless the =$XGD_DATA_DIR/emacs/backup= directory exists, create it. Then set
+as backup directory.
+
+#+begin_src emacs-lisp :tangle yes
+  (let ((backup-dir (concat user-emacs-data-directory "/backup")))
+    (unless (file-directory-p backup-dir)
+      (mkdir backup-dir t))
+
+    (setq-default backup-directory-alist (cons (cons "." backup-dir) nil)))
+#+end_src
+
+** Ido
+#+begin_src emacs-lisp :tangle yes
+(ido-mode)
+#+end_src
+
+** Lock-files
+Disable creation of lock-files named =.#<filename>=.
+#+begin_src emacs-lisp :tangle yes
+  (setq-default create-lockfiles nil)
+#+end_src
+
+** Theme
+Because of some bug i get "cannot load" for this package with use-package.. Load manually
+#+begin_src emacs-lisp :tangle yes
+  (unless (package-installed-p 'spacemacs-theme)
+    (progn
+      (package-refresh-contents)
+      (package-install 'spacemacs-theme)))
+  (load-theme 'spacemacs-dark t)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+#+end_src
+
+** [[https://stackoverflow.com/questions/3984730/emacs-gui-with-emacs-daemon-not-loading-fonts-correctly][Set font]]
+#+begin_src emacs-lisp :tangle yes
+  (add-to-list 'default-frame-alist '(font . "Inconsolata 12"))
+#+end_src
+
+** Basic code style
+#+begin_src emacs-lisp :tangle yes
+   (setq c-basic-indent 4)
+   (setq indent-line-function 'insert-tab)
+   (setq indent-tabs-mode nil)
+   (setq tab-stop-list '(4 8 12 16 20 24 28 32))
+   (setq-default indent-tabs-mode nil)
+   (setq-default tab-width 4)
+#+end_src
+* Language modes
+** Python jedi completions                                           :python:
+#+begin_src emacs-lisp :tangle yes
+  (use-package jedi
+    :ensure t
+    :config
+    (progn
+      (add-hook 'python-mode-hook 'jedi:setup)
+      (setq-default jedi:setup-keys t)
+      (setq-default jedi:complete-on-dot t)))
+
+#+end_src
+
+** Fish shell mode                                                     :fish:
+#+begin_src emacs-lisp :tangle yes
+  (use-package fish-mode :ensure t)
+#+end_src
+
+** Lua
+#+begin_src emacs-lisp :tangle yes
+  (use-package lua-mode :ensure t)
+#+end_src
+
+** Jinja templates
+#+begin_src emacs-lisp :tangle yes
+  (use-package jinja2-mode :ensure t)
+#+end_src
+
+** C/cpp
+#+begin_src emacs-lisp :tangle yes
+  (use-package irony
+    :ensure t
+    :config
+    (progn
+      (add-hook 'c++-mode-hook 'irony-mode)
+      (add-hook 'c-mode-hook 'irony-mode)
+      (add-hook 'objc-mode-hook 'irony-mode)
+      (use-package company-irony
+        :ensure t
+        :config
+        (progn
+          (eval-after-load 'company
+            '(add-to-list 'company-backends 'company-irony))))))
+#+end_src
+
+** Rust
+#+begin_src emacs-lisp :tangle yes
+  (use-package rust-mode :ensure t)
+#+end_src
+
+** Markdown
+#+begin_src emacs-lisp :tangle yes
+  (use-package markdown-mode :ensure t)
+#+end_src
+
+** Go mode                                                               :go:
+#+begin_src emacs-lisp :tangle yes
+  (use-package go-mode
+    :ensure t
+    :config
+    (progn
+      (add-hook 'before-save-hook 'gofmt-before-save)))
+#+end_src
+
+** Web Mode                                                             :web:
+Install web-mode, set rules for filetypes and indent.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package web-mode
+    :ensure t
+    :mode "\\.html\\'"
+    :config
+    (progn
+      (setq-default web-mode-markup-indent-offset 4) ; HTML
+      (setq-default web-mode-css-indent-offset 4)    ; CSS
+      (setq-default web-mode-code-indent-offset 4))) ; JS/PHP/etc
+#+end_src
+
+* Utilities                                                           :utils:
+** Git frontend                                                       :magit:
+Install magit, bind =C-x g= to display the main magit popup and bind
+=C-x M-g= to display a magit popup with keybinds used in magit.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package magit
+    :ensure t
+    :bind (("C-x g" . magit-status)     ; Display the main magit popup
+           ("C-x M-g" . magit-dispatch-popup))) ; Display keybinds for magit
+#+end_src
+
+** Autocomplete                                                     :company:
+#+begin_src emacs-lisp :tangle yes
+  (use-package company
+    :ensure t
+    :bind ("<backtab>" . company-complete)
+    :config
+    (progn
+      ;; TODO: Keybind company-complete to something good
+      (setq-default company-tooltip-minimum-width 15)
+
+      (setq-default company-idle-delay 0.1)
+
+      (global-company-mode)))
+#+end_src
+
+*** Fuzzy Matching                                                      :flx:
+#+begin_src emacs-lisp :tangle yes
+  (use-package company-flx
+    :ensure t
+    :config
+    (progn
+      (with-eval-after-load 'company
+        (company-flx-mode +1))))
+#+end_src
+
+*** Statistics for completions
+#+begin_src emacs-lisp :tangle yes
+  (use-package company-statistics
+    :ensure t
+    :config
+    (progn
+      (setq-default company-statistics-file
+                    (concat user-emacs-data-directory
+                            "/company-statistics.dat"))
+      (company-statistics-mode)))
+#+end_src
+
+*** go                                                                   :go:
+Utilizes the program =gocode= as backend. Available in AUR as =gocode-git=.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package company-go
+    :ensure t
+    :config
+    (progn
+      (add-hook 'go-mode-hook
+                (lambda ()
+                  (unless (executable-find "gocode")
+                    (error "Program: gocode is missing"))
+
+                  (set (make-local-variable 'company-backends) '(company-go))
+                  (company-mode t)))))
+#+end_src
+
+** Fast file search                                                      :ag:
+Install ag, frontend for ag - =the_silver_searcher=.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package ag :ensure t)
+#+end_src
+
+** Flexible ido matching                                            :flx:ido:
+Load ido-mode with flx for flexible matching. Also move the history file to
+=$XGD_DATA_DIR/emacs/ido.dat=.
+
+#+begin_src emacs-lisp :tangle no
+  (use-package flx-ido
+    :ensure t
+    :config
+    (progn
+      ;; Flexible matching
+      (setq-default ido-enable-flex-matching t)
+
+      ;; Load ido-mode
+      (ido-mode 1)
+      (ido-everywhere 1)
+      (flx-ido-mode 1)
+
+      ;; History file
+      (setq-default ido-save-directory-list-file
+                    (concat user-emacs-data-directory "/ido.dat"))
+
+      ;; Always open files in current frame
+      (setq-default ido-default-file-method 'selected-window)
+
+      ;; Always switch to buffers in current frame
+      (setq-default ido-default-buffer-method 'selected-window)
+      (ido-mode)))
+#+end_src
+
+** Smooth scrolling                                        :smooth:scrolling:
+This package makes Emacs scroll before cursor reach top or bottom which makes
+scrolling smoother.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package smooth-scrolling
+    :ensure t
+    :config
+    (progn
+      (setq-default smooth-scroll-margin 2)))
+#+end_src
+
+** Fancy search                                                      :swiper:
+#+begin_src emacs-lisp :tangle yes
+  (use-package swiper
+    :ensure t
+    :bind (("C-s" . swiper)
+           ("C-r" . swiper))
+    :config
+    (progn
+      (setq-default ivy-use-virtual-buffers t)))
+#+end_src
+
+** Markdown
+Handy when editing markdown.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package markdown-mode :ensure t)
+#+end_src
+
+** YAML
+Handy when editing YAML/YML.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package yaml-mode :ensure t)
+#+end_src
+
+** webpaste                                                           :paste:
+Paste whole buffers or parts of buffers to the internet.
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package webpaste
+    :ensure t
+    :bind (("C-c C-p C-b" . webpaste-paste-buffer)
+           ("C-c C-p C-r" . webpaste-paste-region)))
+#+end_src
+
+** Smart-mode-line
+#+begin_src emacs-lisp :tangle yes
+  (use-package smart-mode-line
+    :ensure t
+    :config
+    (progn
+      (use-package smart-mode-line-powerline-theme
+        :ensure t
+        :config
+        (progn
+          (setq sml/theme 'powerline)
+          (setq sml/no-confirm-load-theme t)
+          (sml/setup)))))
+#+end_src
+
+** Syntax checking and linting                                     :flycheck:...
+#+begin_src emacs-lisp :tangle yes
+  (use-package flycheck
+    :ensure t
+    :config
+    (progn
+      (use-package flycheck-irony :ensure t)
+      (use-package flycheck-mypy :ensure t)
+      (use-package flycheck-rust :ensure t)
+      (global-flycheck-mode)))
+#+end_src
+
+* Useless utilities
+** Nyan-mode
+#+begin_src emacs-lisp :tangle yes
+  (use-package nyan-mode
+    :ensure t
+    :config
+    (progn
+        (nyan-mode)))
+#+end_src
+
