@@ -73,14 +73,15 @@ Disable creation of lock-files named =.#<filename>=.
 ** Theme
 Because of some bug i get "cannot load" for this package with use-package.. Load manually
 #+begin_src emacs-lisp :tangle yes
-  (unless (package-installed-p 'spacemacs-theme)
-    (progn
-      (package-refresh-contents)
-      (package-install 'spacemacs-theme)))
-  (load-theme 'spacemacs-dark t)
-  (menu-bar-mode -1)
-  (tool-bar-mode -1)
-  (scroll-bar-mode -1)
+(use-package zerodark-theme
+  :ensure t
+  :config
+  (progn
+    (load-theme 'zerodark t)
+    (zerodark-setup-modeline-format)
+    (menu-bar-mode -1)
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1)))
 #+end_src
 
 ** [[https://stackoverflow.com/questions/3984730/emacs-gui-with-emacs-daemon-not-loading-fonts-correctly][Set font]]
