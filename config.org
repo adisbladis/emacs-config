@@ -90,12 +90,13 @@ Because of some bug i get "cannot load" for this package with use-package.. Load
 
 ** Basic code style
 #+begin_src emacs-lisp :tangle yes
-   (setq c-basic-indent 4)
-   (setq indent-line-function 'insert-tab)
-   (setq indent-tabs-mode nil)
-   (setq tab-stop-list '(4 8 12 16 20 24 28 32))
-   (setq-default indent-tabs-mode nil)
-   (setq-default tab-width 4)
+  (setq c-basic-indent 4)
+  (setq indent-line-function 'insert-tab)
+  (setq indent-tabs-mode nil)
+  (setq tab-stop-list '(4 8 12 16 20 24 28 32))
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
 #+end_src
 * Major modes
 ** Python jedi completions                                           :python:
@@ -366,4 +367,3 @@ Paste whole buffers or parts of buffers to the internet.
     (progn
         (nyan-mode)))
 #+end_src
-
